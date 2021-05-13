@@ -140,6 +140,9 @@ class DepthImage(Image):
             img += default_filler
 
         with open(pcd_filename) as f:
+            fx = 0
+            fy = 0
+            count = 0
             for l in f.readlines():
                 ls = l.split()
 
@@ -163,8 +166,17 @@ class DepthImage(Image):
 
                     img[r, c] = np.sqrt(x ** 2 + y ** 2 + z ** 2)
 
+                    fx += float((c - shape[1]/2)) * z / x
+                    fy += float((r - shape[0]/2)) * z / y
+                    count += 1
+
                 else:
                     img[r, c] = float(ls[index])
+            
+            fx = fx / count
+            fy = fy / count
+
+            print("fx: {} fy: {}".format(fx, fy))
 
         return cls(img / 1000.0)
 

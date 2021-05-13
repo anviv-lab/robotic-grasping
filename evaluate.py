@@ -121,10 +121,15 @@ if __name__ == '__main__':
             for idx, (x, y, didx, rot, zoom) in enumerate(test_data):
                 xc = x.to(device)
                 yc = [yi.to(device) for yi in y]
-                lossd = net.compute_loss(xc, yc)
+                # lossd = net.compute_loss(xc)
 
-                q_img, ang_img, width_img = post_process_output(lossd['pred']['pos'], lossd['pred']['cos'],
-                                                                lossd['pred']['sin'], lossd['pred']['width'])
+                # q_img, ang_img, width_img = post_process_output(lossd['pred']['pos'], lossd['pred']['cos'],
+                #                                                 lossd['pred']['sin'], lossd['pred']['width'])
+
+                pred = net(xc)
+
+                q_img, ang_img, width_img = post_process_output(pred[0], pred[1], pred[2], pred[3])
+
 
                 if args.iou_eval:
                     s = evaluation.calculate_iou_match(q_img, ang_img, test_data.dataset.get_gtbb(didx, rot, zoom),
@@ -145,14 +150,17 @@ if __name__ == '__main__':
                             f.write(g.to_jacquard(scale=1024 / 300) + '\n')
 
                 if args.vis:
+                    # _, left, top = test_data.dataset._get_crop_attrs(didx)
+
                     save_results(
                         rgb_img=test_data.dataset.get_rgb(didx, rot, zoom, normalise=False),
-                        depth_img=test_data.dataset.get_depth(didx, rot, zoom),
+                        depth_img=test_data.dataset.get_depth(didx, rot, zoom, normalise=False),
                         grasp_q_img=q_img,
                         grasp_angle_img=ang_img,
                         no_grasps=args.n_grasps,
                         grasp_width_img=width_img,
-                        idx=idx
+                        idx=idx,
+                        # offset=[left, top]
                     )
 
         avg_time = (time.time() - start_time) / len(test_data)
